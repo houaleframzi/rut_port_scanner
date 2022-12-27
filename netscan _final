@@ -1,0 +1,287 @@
+#!/bin/sh
+echo >> netscan_log.txt | echo > netscan_log.txt
+echo >> portscan_log.txt | echo > portscan_log.txt
+echo >> ip_log.txt | echo > ip_log.txt
+echo >> mac_log.txt | echo > mac_log.txt
+
+
+port1_on=../1.png
+port1_off=../1_empty.png
+
+port2_on=../2.png
+port2_off=../2_empty.png
+
+port3_on=../3.png
+port3_off=../3_empty.png
+
+port4_on=../4.png
+port4_off=../4_empty.png
+
+port1_status=$port1_on
+port2_status=$port2_on
+port3_status=$port3_on
+port4_status=$port4_on
+
+
+for NETWORK in 1 8 254
+do
+arp-scan -xqg 192.168.$NETWORK.0/24 >> netscan_log.txt
+done
+swconfig dev switch0 get arl_table | grep -v "Port 0" | grep -v "add*" >> portscan_log.txt
+ips="$(awk '{print $1}' netscan_log.txt)" 
+echo $ips > ip_log.txt
+ip1="$(awk '{print $1}' ip_log.txt)"
+ip2="$(awk '{print $2}' ip_log.txt)"
+ip3="$(awk '{print $3}' ip_log.txt)"
+ip4="$(awk '{print $4}' ip_log.txt)"
+ip5="$(awk '{print $5}' ip_log.txt)"
+ip6="$(awk '{print $6}' ip_log.txt)"
+ip7="$(awk '{print $7}' ip_log.txt)"
+ip8="$(awk '{print $8}' ip_log.txt)"
+macs="$(awk '{print $2}' netscan_log.txt)"
+echo $macs > mac_log.txt
+mac1="$(awk '{print $1}' mac_log.txt)"
+mac2="$(awk '{print $2}' mac_log.txt)"
+mac3="$(awk '{print $3}' mac_log.txt)"
+mac4="$(awk '{print $4}' mac_log.txt)"
+mac5="$(awk '{print $5}' mac_log.txt)"
+mac6="$(awk '{print $6}' mac_log.txt)"
+mac7="$(awk '{print $7}' mac_log.txt)"
+mac8="$(awk '{print $8}' mac_log.txt)"
+ports="$(awk '{gsub(/MAC/,""); print}' portscan_log.txt)"
+echo "$ports" > portscan_log.txt
+ports="$(awk '{gsub(/Port 4/,"LAN1"); print}' portscan_log.txt)"
+echo "$ports" > portscan_log.txt
+ports="$(awk '{gsub(/Port 3/,"LAN2"); print}' portscan_log.txt)"
+echo "$ports" > portscan_log.txt
+ports="$(awk '{gsub(/Port 2/,"LAN3"); print}' portscan_log.txt)"
+echo "$ports" > portscan_log.txt
+ports="$(awk '{gsub(/Port 1/,"WAN"); print}' portscan_log.txt)"
+echo "$ports" > portscan_log.txt
+LAN1_mac="$(awk -v key=LAN1: '$1 == key { print $2 }' portscan_log.txt)"
+LAN2_mac="$(awk -v key=LAN2: '$1 == key { print $2 }' portscan_log.txt)"
+LAN3_mac="$(awk -v key=LAN3: '$1 == key { print $2 }' portscan_log.txt)"
+WAN_mac="$(awk -v key=WAN: '$1 == key { print $2 }' portscan_log.txt)"
+
+
+if [ "$LAN1_mac" = "$mac1" ] 
+then
+  LAN1_ip=$ip1
+
+elif [ "$LAN1_mac" = "$mac2" ] 
+then
+  LAN1_ip=$ip2
+
+elif [ "$LAN1_mac" = "$mac3" ] 
+then
+  LAN1_ip=$ip3
+
+elif [ "$LAN1_mac" = "$mac4" ] 
+then
+  LAN1_ip=$ip4
+
+elif [ "$LAN1_mac" = "$mac5" ] 
+then
+  LAN1_ip=$ip5
+
+elif [ "$LAN1_mac" = "$mac6" ] 
+then
+  LAN1_ip=$ip6
+
+elif [ "$LAN1_mac" = "$mac7" ] 
+then
+   LAN1_ip=$ip7
+
+elif [ "$LAN1_mac" = "$mac8" ] 
+then
+   LAN1_ip=$ip8
+
+else
+  echo "none"
+fi
+
+
+
+if [ "$LAN2_mac" = "$mac1" ] 
+then
+  LAN2_ip=$ip1
+
+elif [ "$LAN2_mac" = "$mac2" ] 
+then
+  LAN2_ip=$ip2
+
+elif [ "$LAN2_mac" = "$mac3" ] 
+then
+  LAN2_ip=$ip3
+
+elif [ "$LAN2_mac" = "$mac4" ] 
+then
+  LAN2_ip=$ip4
+
+elif [ "$LAN2_mac" = "$mac5" ] 
+then
+  LAN2_ip=$ip5
+
+elif [ "$LAN2_mac" = "$mac6" ] 
+then
+  LAN2_ip=$ip6
+
+elif [ "$LAN2_mac" = "$mac7" ] 
+then
+   LAN2_ip=$ip7
+
+elif [ "$LAN2_mac" = "$mac8" ] 
+then
+   LAN2_ip=$ip8
+
+else
+  echo "none"
+fi
+
+
+
+if [ "$LAN3_mac" = "$mac1" ] 
+then
+  LAN3_ip=$ip1
+
+elif [ "$LAN3_mac" = "$mac2" ] 
+then
+  LAN3_ip=$ip2
+
+elif [ "$LAN3_mac" = "$mac3" ] 
+then
+  LAN3_ip=$ip3
+
+elif [ "$LAN3_mac" = "$mac4" ] 
+then
+  LAN3_ip=$ip4
+
+elif [ "$LAN3_mac" = "$mac5" ] 
+then
+  LAN3_ip=$ip5
+
+elif [ "$LAN3_mac" = "$mac6" ] 
+then
+  LAN3_ip=$ip6
+
+elif [ "$LAN3_mac" = "$mac7" ] 
+then
+   LAN3_ip=$ip7
+
+elif [ "$LAN3_mac" = "$mac8" ] 
+then
+   LAN3_ip=$ip8
+
+else
+  echo "none"
+fi
+
+
+
+if [ "$WAN_mac" = "$mac1" ] 
+then
+  WAN_ip=$ip1
+
+elif [ "$WAN_mac" = "$mac2" ] 
+then
+  WAN_ip=$ip2
+
+elif [ "$WAN_mac" = "$mac3" ] 
+then
+  WAN_ip=$ip3
+
+elif [ "$WAN_mac" = "$mac4" ] 
+then
+  WAN_ip=$ip4
+
+elif [ "WAN_mac" = "$mac5" ] 
+then
+  WAN_ip=$ip5
+
+elif [ "$WAN_mac" = "$mac6" ] 
+then
+  WAN_ip=$ip6
+
+elif [ "$WAN_mac" = "$mac7" ] 
+then
+   WAN_ip=$ip7
+
+elif [ "WAN_mac" = "$mac8" ] 
+then
+   WAN_ip=$ip8
+
+else
+  echo "none"
+fi
+
+
+if [ "$LAN1_mac" = "" ] 
+then
+  port1_status=$port1_off
+fi
+
+if [ "$LAN2_mac" = "" ] 
+then
+  port2_status=$port2_off
+fi
+
+if [ "$LAN3_mac" = "" ] 
+then
+  port3_status=$port3_off
+fi
+
+if [ "$WAN_mac" = "" ] 
+then
+  port4_status=$port4_off
+fi
+
+echo "Content-type: text/html"
+echo
+cat <<EOT 
+<!DOCTYPE html>
+    <html>
+
+    <head>
+        <title>
+            EVERCAM NetScanner
+        </title>
+    </head>
+
+    <body>
+
+            
+        <center>
+            <h2>EVERCAM NetScanner</h2><br>
+            <table border="4" align="center" width="583px">
+                <tr>
+                    <td align="center" width="55px"><b>PORT</b></td>
+                    <td align="center" width="132px">    LAN1    </td>
+                    <td align="center" width="132px">    LAN2    </td>
+                    <td align="center" width="132px">    LAN3    </td>
+                    <td align="center" width="132px">    WAN    </td>
+                </tr>
+                <tr>
+                    <td align="center"><b>MAC</b></td>
+                    <td align="center">$LAN1_mac</td>
+                    <td align="center">$LAN2_mac</td>
+                    <td align="center">$LAN3_mac</td>
+                    <td align="center">$WAN_mac</td>
+                </tr>
+                <tr>
+                    <td align="center"> <b>IP</b></td>
+                    <td align="center">  $LAN1_ip</td>
+                    <td align="center">  $LAN2_ip</td>
+                    <td align="center">  $LAN3_ip</td>
+                    <td align="center">  $WAN_ip</td>
+                    
+                </tr>
+            </table><br>
+            <img src="$port1_status" alt="Image" height="142" width="144">
+            <img src="$port2_status" alt="Image" height="142" width="144">
+            <img src="$port3_status" alt="Image" height="142" width="144">
+            <img src="$port4_status" alt="Image" height="142" width="144">
+        </center>
+    </body>
+
+    </html>
+EOT
