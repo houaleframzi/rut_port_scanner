@@ -97,7 +97,7 @@ then
    LAN1_ip=$ip8
 
 else
-  echo "none"
+  LAN1_ip=NONE
 fi
 
 
@@ -135,7 +135,7 @@ then
    LAN2_ip=$ip8
 
 else
-  echo "none"
+LAN2_ip=NONE
 fi
 
 
@@ -173,7 +173,7 @@ then
    LAN3_ip=$ip8
 
 else
-  echo "none"
+LAN3_ip=NONE
 fi
 
 
@@ -211,7 +211,7 @@ then
    WAN_ip=$ip8
 
 else
-  echo "none"
+WAN_ip=NONE
 fi
 
 
