@@ -4,7 +4,6 @@ echo >> portscan_log.txt | echo > portscan_log.txt
 echo >> ip_log.txt | echo > ip_log.txt
 echo >> mac_log.txt | echo > mac_log.txt
 
-rm *.png
 
 port1_on=../1.png
 port1_off=../1_empty.png
