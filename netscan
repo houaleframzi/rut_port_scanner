@@ -3,6 +3,7 @@ echo >> netscan_log.txt | echo > netscan_log.txt
 echo >> portscan_log.txt | echo > portscan_log.txt
 echo >> ip_log.txt | echo > ip_log.txt
 echo >> mac_log.txt | echo > mac_log.txt
+swconfig dev switch0 set flush_arl_table
 
 
 port1_on=../1.png
