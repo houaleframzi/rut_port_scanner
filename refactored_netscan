@@ -1,0 +1,147 @@
+#!/bin/sh
+# Refactored: fewer temp files, no repetitive awk/if ladders, safer defaults.
+
+set -eu
+
+# ----------------------------
+# Config
+# ----------------------------
+LOG_NET="netscan_log.txt"
+LOG_PORT="portscan_log.txt"
+
+# Images (relative to this CGI script location)
+PORT1_ON="../1.png"
+PORT1_OFF="../1_empty.png"
+PORT2_ON="../2.png"
+PORT2_OFF="../2_empty.png"
+PORT3_ON="../3.png"
+PORT3_OFF="../3_empty.png"
+PORT4_ON="../4.png"
+PORT4_OFF="../4_empty.png"
+
+# Networks to scan (192.168.X.0/24)
+NETWORKS="1 8 254"
+
+# swconfig port labels (your original mapping)
+# Port 4 -> LAN1, Port 3 -> LAN2, Port 2 -> LAN3, Port 1 -> WAN
+LAN1_PORT="Port 4"
+LAN2_PORT="Port 3"
+LAN3_PORT="Port 2"
+WAN_PORT="Port 1"
+
+# ----------------------------
+# Helpers
+# ----------------------------
+reset_file() { : > "$1"; }
+
+# Get first MAC in ARL table for a given "Port N" (returns empty if none)
+mac_for_port() {
+  port_label="$1"
+  # Example expected lines include "... Port 4 ... <mac> ..."
+  # We normalize to "Port N:" then print next field (MAC)
+  swconfig dev switch0 get arl_table \
+    | awk -v p="$port_label" '
+        $0 ~ p {
+          for (i=1; i<=NF; i++) {
+            if ($i ~ /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/) { print $i; exit }
+          }
+        }
+      ' || true
+}
+
+# Find IP for a given MAC from netscan log (returns NONE if not found/empty)
+ip_for_mac() {
+  mac="$1"
+  [ -n "${mac:-}" ] || { echo "NONE"; return; }
+
+  awk -v m="$mac" '
+    $2 == m { print $1; found=1; exit }
+    END { if (!found) print "NONE" }
+  ' "$LOG_NET"
+}
+
+# Choose correct port image based on whether MAC is present
+status_img() {
+  mac="$1"; on="$2"; off="$3"
+  if [ -n "${mac:-}" ]; then echo "$on"; else echo "$off"; fi
+}
+
+# ----------------------------
+# Main
+# ----------------------------
+
+reset_file "$LOG_NET"
+reset_file "$LOG_PORT"
+
+# Flush ARL table (ignore failure to avoid blank CGI if swconfig missing)
+swconfig dev switch0 set flush_arl_table >/dev/null 2>&1 || true
+
+# Network scan
+for n in $NETWORKS; do
+  arp-scan -xqg "192.168.$n.0/24" >>"$LOG_NET" 2>/dev/null || true
+done
+
+# Resolve MACs by switch port
+LAN1_mac="$(mac_for_port "$LAN1_PORT")"
+LAN2_mac="$(mac_for_port "$LAN2_PORT")"
+LAN3_mac="$(mac_for_port "$LAN3_PORT")"
+WAN_mac="$(mac_for_port "$WAN_PORT")"
+
+# Resolve IPs by MAC lookup in netscan output
+LAN1_ip="$(ip_for_mac "$LAN1_mac")"
+LAN2_ip="$(ip_for_mac "$LAN2_mac")"
+LAN3_ip="$(ip_for_mac "$LAN3_mac")"
+WAN_ip="$(ip_for_mac "$WAN_mac")"
+
+# Images
+port1_status="$(status_img "$LAN1_mac" "$PORT1_ON" "$PORT1_OFF")"
+port2_status="$(status_img "$LAN2_mac" "$PORT2_ON" "$PORT2_OFF")"
+port3_status="$(status_img "$LAN3_mac" "$PORT3_ON" "$PORT3_OFF")"
+port4_status="$(status_img "$WAN_mac"  "$PORT4_ON" "$PORT4_OFF")"
+
+# ----------------------------
+# Output (CGI HTML)
+# ----------------------------
+echo "Content-type: text/html"
+echo
+cat <<EOT
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EVERCAM NetScanner</title>
+</head>
+<body>
+  <center>
+    <h2>EVERCAM NetScanner</h2><br>
+    <table border="4" align="center" width="583px">
+      <tr>
+        <td align="center" width="55px"><b>PORT</b></td>
+        <td align="center" width="132px">LAN1</td>
+        <td align="center" width="132px">LAN2</td>
+        <td align="center" width="132px">LAN3</td>
+        <td align="center" width="132px">WAN</td>
+      </tr>
+      <tr>
+        <td align="center"><b>MAC</b></td>
+        <td align="center">${LAN1_mac:-}</td>
+        <td align="center">${LAN2_mac:-}</td>
+        <td align="center">${LAN3_mac:-}</td>
+        <td align="center">${WAN_mac:-}</td>
+      </tr>
+      <tr>
+        <td align="center"><b>IP</b></td>
+        <td align="center">${LAN1_ip}</td>
+        <td align="center">${LAN2_ip}</td>
+        <td align="center">${LAN3_ip}</td>
+        <td align="center">${WAN_ip}</td>
+      </tr>
+    </table><br>
+
+    <img src="$port1_status" alt="LAN1" height="142" width="144">
+    <img src="$port2_status" alt="LAN2" height="142" width="144">
+    <img src="$port3_status" alt="LAN3" height="142" width="144">
+    <img src="$port4_status" alt="WAN"  height="142" width="144">
+  </center>
+</body>
+</html>
+EOT
